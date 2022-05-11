@@ -23,15 +23,6 @@ def getProjects():
     result = listdir("filePoint/")
     return result
 
-def loadProject(projectName):
-    folderPath = path.join("filePoint",projectName)
-    f = open(path.join(folderPath,"anatomical.nii"),"rb")
-    anatomical=f.read(-1)
-    f.close()
-    anatomicalB64 = base64.b64encode(anatomical).decode('utf-8')
-    return anatomicalB64
-
-
 
 @app.route("/listProjects",methods=['GET'])
 @cross_origin()
@@ -62,11 +53,9 @@ def uploadProjectHandler():
     jsonFile = path.join(folderPath,'info.json')
     with open(jsonFile, 'r') as file:
         data = json.load(file)
-        data['status'] = 'calculating'
+        data['status'] = 'setup'
     with open(jsonFile, 'w') as file:
         json.dump(data, file)
-    thread = Thread(target=workloadCalculateMatrix,args=(folderPath,))
-    thread.start()
     return jsonify({'success':True}) 
 
 @app.route('/data/<path:path>')
@@ -74,15 +63,26 @@ def uploadProjectHandler():
 def send_volume(path):
     vals = path.split('@')
     k = 0
+    quality = ""
+
+    print(vals, file=sys.stderr)
+    projectName = vals[0]
     if(len(vals)>1):
-        projectName,k = vals
+        quality = vals[1]
+    if(len(vals)>2):
+        k = vals[2]
     else:
         projectName = vals[0]
     if(k == 0):
         fStr = 'filePoint/'+projectName+'/anatomical.nii'
     else:
-        fStr = 'filePoint/'+projectName+'/cluster_'+str(k)+'_BIG.nii'
-    print(fStr, file=sys.stderr)
+        if(quality == 'BIG'):
+            fStr = 'filePoint/'+projectName+'/cluster_'+str(k)+'_BIG.nii'
+        elif(quality == 'RAW'):
+            fStr = 'filePoint/'+projectName+'/anatomicalOrigin.nii'
+        else:
+            fStr = 'filePoint/'+projectName+'/cluster_'+str(k)+'.nii'
+    print('Sent '+fStr, file=sys.stderr)
     if exists(fStr):
         return send_from_directory('.', fStr)
     else:
@@ -106,13 +106,33 @@ def parcellate():
     with open(jsonFile, 'r') as file:
         data = json.load(file)
         data['status'] = 'parcellating'
+        maskThresh = float(data['maskThresh'])
     with open(jsonFile, 'w') as file:
         json.dump(data, file)
 
     folderPath = path.join("filePoint",projectName)
-    thread = Thread(target=workloadParcellate,args=(folderPath,int(k),))
+    thread = Thread(target=workloadParcellate,args=(folderPath,int(k),maskThresh,))
     thread.start()
     return jsonify({'success':True})  
+
+@app.route('/calcCorr')
+@cross_origin()
+def calcCorr():
+    projectName = request.headers.get('projectName')
+    corrThresh = float(request.headers.get('corrThresh'))
+    maskThresh = float(request.headers.get('maskThresh'))
+
+    jsonFile = path.join("filePoint",projectName,'info.json')
+    with open(jsonFile, 'r') as file:
+        data = json.load(file)
+        data['status'] = 'calculating'
+    with open(jsonFile, 'w') as file:
+        json.dump(data, file)
+
+    folderPath = path.join("filePoint",projectName)
+    thread = Thread(target=workloadCalculateMatrix,args=(folderPath,corrThresh,maskThresh))
+    thread.start()
+    return jsonify({'success':True}) 
 
 @app.route('/delete/<path>')
 @cross_origin()
