@@ -34,6 +34,9 @@ def newProject(projectName,file,connProject):
         "status":"new", # new, setup, calculating, ready, parcellating
         "parc":['Исходный снимок'],
         "editable":"no",
+        "corrThresh":"50",
+        "maskThresh":"2",
+
     }
     with open(os.path.join(folderPath,'info.json'), 'w') as fp:
         json.dump(data, fp)

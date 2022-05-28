@@ -126,6 +126,8 @@ def calcCorr():
     with open(jsonFile, 'r') as file:
         data = json.load(file)
         data['status'] = 'calculating'
+    data['corrThresh'] = corrThresh
+    data['maskThresh'] = maskThresh
     with open(jsonFile, 'w') as file:
         json.dump(data, file)
 
