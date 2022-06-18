@@ -12,8 +12,6 @@ import clustering as clustering
 
 
 def workloadCalculateMatrix(projectPath,corrThresh,maskThresh):
-    corrThresh/=100
-    maskThresh/=100
     clustering.calculateMatrix("../vega/"+projectPath,corrThresh,maskThresh)
     
     jsonFile = path.join(projectPath,'info.json')
@@ -28,7 +26,6 @@ def workloadCalculateMatrix(projectPath,corrThresh,maskThresh):
     return
 
 def workloadParcellate(projectPath,k,maskThresh):
-    maskThresh/=100
     print("maskThresh ",maskThresh," @ k=",k,file=sys.stderr)
     clustering.cluster("../vega/"+projectPath,k,maskThresh)
     jsonFile = path.join(projectPath,'info.json')

@@ -15,7 +15,6 @@
 #
 ####
 
-from crypt import methods
 import json
 from logging import exception
 from sre_constants import SUCCESS
