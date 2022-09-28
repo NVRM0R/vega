@@ -2,7 +2,7 @@
 
 ####
 # 2022 Vladimir Andreev (andreev.va2010@yandex.ru)
-# as a part of bachelor theses
+# as a part of bachelor's thesis
 # Server math side of web-based brain parcellation server 
 #
 # Functionality:
